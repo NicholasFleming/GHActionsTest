@@ -12,7 +12,7 @@ const timeoutInSeconds = time.Duration(1) * time.Second
 
 type Foo struct {
 	Name string
-	ID   int
+	bar  int
 	Done chan struct{}
 }
 
