@@ -1,4 +1,4 @@
-package GHActionsTest
+package main
 
 import (
 	"fmt"
