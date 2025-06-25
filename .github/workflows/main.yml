@@ -1,21 +1,36 @@
-name: "StaticCheck"
+name: "CI"
 on: ["push", "pull_request"]
 
 jobs:
-  ci:
-    name: "Run StatiCheck"
+  staticcheck:
+    name: "Run StaticCheck"
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
-        fetch-depth: 1
-    - uses: dorny/paths-filter@v3
-      id: changes
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
       with:
-        filters: |
-         allChanges:
-            - added|deleted|modified: '**'
-    - if: steps.changes.outputs.allChanges == 'true'
-      uses: dominikh/staticcheck-action@v1
-      with:
-        version: "latest"
+        go-version: '1.24' 
+
+    - name: Get changed Go files
+      id: changed-files
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          git fetch origin ${{ github.base_ref }}
+          CHANGED_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- '*.go')
+        else
+          CHANGED_FILES=$(git diff --name-only HEAD~1 -- '*.go')
+        fi
+        echo "CHANGED_FILES<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+
+    - name: Run staticcheck on changed files
+      if: steps.changed-files.outputs.CHANGED_FILES != ''
+      run: |
+        go install honnef.co/go/tools/cmd/staticcheck@latest
+        echo "$HOME/go/bin" >> $GITHUB_PATH
+        echo "${{ steps.changed-files.outputs.CHANGED_FILES }}" | xargs staticcheck
