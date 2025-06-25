@@ -11,9 +11,9 @@ import (
 const timeoutInSeconds = time.Duration(1) * time.Second
 
 type Foo struct {
-	Name string
-	baz  int
-	Done chan struct{}
+	Name     string
+	bingbong int
+	Done     chan struct{}
 }
 
 // error should be returned as the last argument (ST1008)
